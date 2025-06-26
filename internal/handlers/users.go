@@ -36,6 +36,7 @@ func (cfg *ApiConfig) GetUser(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
+
 	dbUser, err := cfg.Queries.GetUserByID(context.Background(), userID)
 	if err != nil {
 		log.Printf("Error getting user from userID: %s", err)

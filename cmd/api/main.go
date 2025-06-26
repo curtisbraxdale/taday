@@ -26,10 +26,13 @@ func main() {
 	serveMux := http.NewServeMux()
 	apiCfg := handlers.ApiConfig{Queries: dbQueries, Platform: platform, Secret: secret}
 
-	serveMux.HandleFunc("GET /api/ready", handlers.Ready)
-	serveMux.HandleFunc("GET /api/users", apiCfg.GetUser)
-	secure(serveMux, "GET /api/events", apiCfg.GetUserEvents, secret)
+	serveMux.HandleFunc("GET /api/ready", handlers.ReadyCheck)
 	serveMux.HandleFunc("POST /api/login", apiCfg.Login)
+	secure(serveMux, "POST /api/logout", apiCfg.Logout, secret)
+	secure(serveMux, "POST /api/refresh", apiCfg.Refresh, secret)
+	secure(serveMux, "POST /api/revoke", apiCfg.Revoke, secret)
+	secure(serveMux, "GET /api/users", apiCfg.GetUser, secret)
+	secure(serveMux, "GET /api/events", apiCfg.GetUserEvents, secret)
 
 	server := http.Server{}
 	server.Handler = serveMux
