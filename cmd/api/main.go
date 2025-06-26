@@ -26,7 +26,7 @@ func main() {
 	apiCfg := handlers.ApiConfig{Queries: dbQueries, Platform: platform, Secret: secret}
 
 	serveMux.HandleFunc("GET /api/ready", handlers.Ready)
-	serveMux.HandleFunc("GET /api/users", apiCfg.GetUsers)
+	serveMux.HandleFunc("GET /api/users/{userID}", apiCfg.GetUser)
 	serveMux.HandleFunc("GET /api/events/{userID}", apiCfg.GetUserEvents)
 
 	server := http.Server{}
