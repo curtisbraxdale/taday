@@ -47,7 +47,7 @@ func (cfg *ApiConfig) GetUser(w http.ResponseWriter, req *http.Request) {
 	respondWithJSON(w, 200, user)
 }
 
-func (cfg *ApiConfig) CreateUser(w http.ResponseWriter, req http.Request) {
+func (cfg *ApiConfig) CreateUser(w http.ResponseWriter, req *http.Request) {
 	type parameters struct {
 		Username    string `json:"username"`
 		Email       string `json:"email"`

@@ -28,9 +28,12 @@ func main() {
 
 	serveMux.HandleFunc("GET /api/ready", handlers.ReadyCheck)
 	serveMux.HandleFunc("POST /api/login", apiCfg.Login)
+	serveMux.HandleFunc("POST /api/users", apiCfg.CreateUser)
 	secure(serveMux, "POST /api/logout", apiCfg.Logout, secret)
 	secure(serveMux, "POST /api/refresh", apiCfg.Refresh, secret)
 	secure(serveMux, "POST /api/revoke", apiCfg.Revoke, secret)
+	secure(serveMux, "POST /api/todos", apiCfg.CreateToDo, secret)
+	secure(serveMux, "POST /api/events", apiCfg.CreateEvent, secret)
 	secure(serveMux, "GET /api/users", apiCfg.GetUser, secret)
 	secure(serveMux, "GET /api/events", apiCfg.GetUserEvents, secret)
 
