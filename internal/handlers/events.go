@@ -7,6 +7,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/curtisbraxdale/taday/internal/auth"
 	"github.com/google/uuid"
 )
 
@@ -27,12 +28,21 @@ type Event struct {
 }
 
 func (cfg *ApiConfig) GetUserEvents(w http.ResponseWriter, req *http.Request) {
-	userID, err := uuid.Parse(req.PathValue("userID"))
+	accessCookie, err := req.Cookie("access_token")
 	if err != nil {
-		log.Printf("Error parsing uuid: %s", err)
-		w.WriteHeader(500)
+		log.Printf("Access token not found in cookies: %s", err)
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
+	accessToken := accessCookie.Value
+
+	userID, err := auth.ValidateAccessToken(accessToken, cfg.Secret)
+	if err != nil {
+		log.Printf("Access token invalid: %s", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
 	dbEvents, err := cfg.Queries.GetEventsByUserID(context.Background(), userID)
 	if err != nil {
 		log.Printf("Error finding events for given userID: %s", err)

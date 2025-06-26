@@ -1,17 +1,29 @@
 package auth
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
-	"net/http"
-	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
+
+type contextKey string
+
+const userIDContextKey = contextKey("userID")
+
+func ContextWithUserID(ctx context.Context, userID uuid.UUID) context.Context {
+	return context.WithValue(ctx, userIDContextKey, userID)
+}
+
+func UserIDFromContext(ctx context.Context) (uuid.UUID, bool) {
+	userID, ok := ctx.Value(userIDContextKey).(uuid.UUID)
+	return userID, ok
+}
 
 func HashPassword(password string) (string, error) {
 	hashedPass, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -29,21 +41,21 @@ func CheckPasswordHash(hash, password string) error {
 	return nil
 }
 
-func MakeJWT(userID uuid.UUID, tokenSecret string, expiresIn time.Duration) (string, error) {
-	unsignedJWT := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{Issuer: "chirpy", IssuedAt: jwt.NewNumericDate(time.Now()), ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiresIn)), Subject: userID.String()})
-	signedJWT, err := unsignedJWT.SignedString([]byte(tokenSecret))
+func MakeAccessToken(userID uuid.UUID, tokenSecret string, expiresIn time.Duration) (string, error) {
+	unsignedAccessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{Issuer: "taday", IssuedAt: jwt.NewNumericDate(time.Now()), ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiresIn)), Subject: userID.String()})
+	signedAccessToken, err := unsignedAccessToken.SignedString([]byte(tokenSecret))
 	if err != nil {
 		return "", err
 	}
-	return signedJWT, nil
+	return signedAccessToken, nil
 }
 
-func ValidateJWT(tokenString, tokenSecret string) (uuid.UUID, error) {
-	jwtToken, err := jwt.ParseWithClaims(tokenString, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) { return []byte(tokenSecret), nil })
+func ValidateAccessToken(tokenString, tokenSecret string) (uuid.UUID, error) {
+	accessToken, err := jwt.ParseWithClaims(tokenString, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) { return []byte(tokenSecret), nil })
 	if err != nil {
 		return uuid.Nil, err
 	}
-	claims, ok := jwtToken.Claims.(*jwt.RegisteredClaims)
+	claims, ok := accessToken.Claims.(*jwt.RegisteredClaims)
 	if !ok {
 		return uuid.Nil, errors.New("Invalid token.")
 	}
@@ -58,16 +70,6 @@ func ValidateJWT(tokenString, tokenSecret string) (uuid.UUID, error) {
 	return userID, nil
 }
 
-func GetBearerToken(headers http.Header) (string, error) {
-	tokenString := headers.Get("Authorization")
-	tokenString, foundPrefix := strings.CutPrefix(tokenString, "Bearer")
-	if !foundPrefix {
-		return "", errors.New("Couldn't get token string.")
-	}
-	tokenString = strings.TrimSpace(tokenString)
-	return tokenString, nil
-}
-
 func MakeRefreshToken() (string, error) {
 	bytes := make([]byte, 32)
 	_, err := rand.Read(bytes)
@@ -76,14 +78,4 @@ func MakeRefreshToken() (string, error) {
 	}
 	token := hex.EncodeToString(bytes)
 	return token, nil
-}
-
-func GetAPIKey(headers http.Header) (string, error) {
-	keyString := headers.Get("Authorization")
-	keyString, foundPrefix := strings.CutPrefix(keyString, "ApiKey")
-	if !foundPrefix {
-		return "", errors.New("Couldn't get API Key.")
-	}
-	keyString = strings.TrimSpace(keyString)
-	return keyString, nil
 }
