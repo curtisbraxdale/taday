@@ -6,7 +6,7 @@ CREATE TABLE todos (
     updated_at TIMESTAMP NOT NULL,
     date TIMESTAMP,
     title TEXT NOT NULL,
-    description TEXT,
+    description TEXT
 );
 
 -- +goose Down

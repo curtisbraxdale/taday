@@ -13,7 +13,7 @@ CREATE TABLE subscriptions (
     trial_start TIMESTAMP,
     trial_end TIMESTAMP,
     created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL
 );
 
 -- +goose Down
