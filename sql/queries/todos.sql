@@ -11,6 +11,16 @@ VALUES (
 )
 RETURNING *;
 
+-- name: UpdateToDo :one
+UPDATE todos
+SET
+    updated_at = NOW(),
+    date = @date,
+    title = @title,
+    description = @description
+WHERE id = @todo_id
+RETURNING *;
+
 -- name: DeleteTodos :exec
 DELETE FROM todos;
 

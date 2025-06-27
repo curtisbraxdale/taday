@@ -102,7 +102,7 @@ func (cfg *ApiConfig) GetUserToDos(w http.ResponseWriter, req *http.Request) {
 }
 
 func (cfg *ApiConfig) GetToDo(w http.ResponseWriter, req *http.Request) {
-	toDoID, err := uuid.Parse(req.PathValue("id"))
+	toDoID, err := uuid.Parse(req.PathValue("todo_id"))
 	if err != nil {
 		log.Printf("Error parsing uuid: %s", err)
 		w.WriteHeader(500)
@@ -136,4 +136,53 @@ func (cfg *ApiConfig) GetToDo(w http.ResponseWriter, req *http.Request) {
 	}
 	toDo := ToDo{ID: dbToDo.ID, UserID: dbToDo.UserID, CreatedAt: dbToDo.CreatedAt, UpdatedAt: dbToDo.UpdatedAt, Date: dbToDo.Date.Time, Title: dbToDo.Title, Description: dbToDo.Description.String}
 	respondWithJSON(w, 200, toDo)
+}
+
+func (cfg *ApiConfig) UpdateToDo(w http.ResponseWriter, req *http.Request) {
+	type parameters struct {
+		Date        time.Time `json:"date"`
+		Title       string    `json:"title"`
+		Description string    `json:"description"`
+	}
+
+	toDoID, err := uuid.Parse(req.PathValue("todo_id"))
+	if err != nil {
+		log.Printf("Error parsing uuid: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+
+	accessCookie, err := req.Cookie("access_token")
+	if err != nil {
+		log.Printf("Access token not found in cookies: %s", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	accessToken := accessCookie.Value
+
+	decoder := json.NewDecoder(req.Body)
+	params := parameters{}
+	err = decoder.Decode(&params)
+	if err != nil {
+		log.Printf("Error decoding parameters: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+
+	_, err = auth.ValidateAccessToken(accessToken, cfg.Secret)
+	if err != nil {
+		log.Printf("Access token invalid: %s", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	dbTodoParams := database.UpdateToDoParams{Date: sql.NullTime{Time: params.Date, Valid: true}, Title: params.Title, Description: sql.NullString{String: params.Description, Valid: true}, TodoID: toDoID}
+	dbTodo, err := cfg.Queries.UpdateToDo(req.Context(), dbTodoParams)
+	if err != nil {
+		log.Printf("Error updating todo: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	toDo := ToDo{ID: dbTodo.ID, UserID: dbTodo.UserID, CreatedAt: dbTodo.CreatedAt, UpdatedAt: dbTodo.UpdatedAt, Date: dbTodo.Date.Time, Title: dbTodo.Title, Description: dbTodo.Description.String}
+	respondWithJSON(w, 201, toDo)
 }
