@@ -1,0 +1,16 @@
+version: "2"
+sql:
+  - schema: "sql/schema"
+    queries: "sql/queries"
+    engine: "postgresql"
+    gen:
+      go:
+        package: "database"
+        out: "internal/database"
+        overrides:
+          - db_type: "timestamptz"
+            nullable: true
+            go_type: "database/sql.NullTime"
+          - db_type: "text"
+            nullable: true
+            go_type: "database/sql.NullString"

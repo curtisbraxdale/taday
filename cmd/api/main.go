@@ -10,6 +10,7 @@ import (
 	"github.com/curtisbraxdale/taday/internal/handlers"
 	"github.com/curtisbraxdale/taday/internal/middleware"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 func main() {
