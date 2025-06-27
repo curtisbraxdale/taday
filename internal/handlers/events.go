@@ -197,3 +197,58 @@ func (cfg *ApiConfig) GetEvent(w http.ResponseWriter, req *http.Request) {
 	event := Event{ID: dbEvent.ID, UserID: dbEvent.UserID, CreatedAt: dbEvent.CreatedAt, UpdatedAt: dbEvent.UpdatedAt, StartDate: dbEvent.StartDate, EndDate: dbEvent.EndDate, Title: dbEvent.Title, Description: dbEvent.Description.String, Priority: dbEvent.Priority, RecurD: dbEvent.RecurD, RecurW: dbEvent.RecurW, RecurM: dbEvent.RecurM, RecurY: dbEvent.RecurY}
 	respondWithJSON(w, 200, event)
 }
+
+func (cfg *ApiConfig) UpdateEvent(w http.ResponseWriter, req *http.Request) {
+	type parameters struct {
+		StartDate   time.Time `json:"start_date"`
+		EndDate     time.Time `json:"end_date"`
+		Title       string    `json:"title"`
+		Description string    `json:"description"`
+		Priority    bool      `json:"priority"`
+		RecurD      bool      `json:"recur_d"`
+		RecurW      bool      `json:"recur_w"`
+		RecurM      bool      `json:"recur_m"`
+		RecurY      bool      `json:"recur_y"`
+	}
+
+	eventID, err := uuid.Parse(req.PathValue("event_id"))
+	if err != nil {
+		log.Printf("Error parsing uuid: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+
+	accessCookie, err := req.Cookie("access_token")
+	if err != nil {
+		log.Printf("Access token not found in cookies: %s", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	accessToken := accessCookie.Value
+
+	decoder := json.NewDecoder(req.Body)
+	params := parameters{}
+	err = decoder.Decode(&params)
+	if err != nil {
+		log.Printf("Error decoding parameters: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+
+	_, err = auth.ValidateAccessToken(accessToken, cfg.Secret)
+	if err != nil {
+		log.Printf("Access token invalid: %s", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	dbEventParams := database.UpdateEventParams{StartDate: params.StartDate, EndDate: params.EndDate, Title: params.Title, Description: sql.NullString{String: params.Description, Valid: true}, Priority: params.Priority, RecurD: params.RecurD, RecurW: params.RecurW, RecurM: params.RecurM, RecurY: params.RecurY, EventID: eventID}
+	dbEvent, err := cfg.Queries.UpdateEvent(req.Context(), dbEventParams)
+	if err != nil {
+		log.Printf("Error updating event: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	event := Event{ID: dbEvent.ID, UserID: dbEvent.UserID, CreatedAt: dbEvent.CreatedAt, UpdatedAt: dbEvent.UpdatedAt, StartDate: dbEvent.StartDate, EndDate: dbEvent.EndDate, Title: dbEvent.Title, Description: dbEvent.Description.String, Priority: dbEvent.Priority, RecurD: dbEvent.RecurD, RecurW: dbEvent.RecurW, RecurM: dbEvent.RecurM, RecurY: dbEvent.RecurY}
+	respondWithJSON(w, 201, event)
+}

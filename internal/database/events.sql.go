@@ -217,3 +217,65 @@ func (q *Queries) GetFilteredEvents(ctx context.Context, arg GetFilteredEventsPa
 	}
 	return items, nil
 }
+
+const updateEvent = `-- name: UpdateEvent :one
+UPDATE events
+SET
+    updated_at = NOW(),
+    start_date = $1,
+    end_date = $2,
+    title = $3,
+    description = $4,
+    priority = $5,
+    recur_d = $6,
+    recur_w = $7,
+    recur_m = $8,
+    recur_y = $9
+WHERE id = $10
+RETURNING id, user_id, created_at, updated_at, start_date, end_date, title, description, priority, recur_d, recur_w, recur_m, recur_y
+`
+
+type UpdateEventParams struct {
+	StartDate   time.Time
+	EndDate     time.Time
+	Title       string
+	Description sql.NullString
+	Priority    bool
+	RecurD      bool
+	RecurW      bool
+	RecurM      bool
+	RecurY      bool
+	EventID     uuid.UUID
+}
+
+func (q *Queries) UpdateEvent(ctx context.Context, arg UpdateEventParams) (Event, error) {
+	row := q.db.QueryRowContext(ctx, updateEvent,
+		arg.StartDate,
+		arg.EndDate,
+		arg.Title,
+		arg.Description,
+		arg.Priority,
+		arg.RecurD,
+		arg.RecurW,
+		arg.RecurM,
+		arg.RecurY,
+		arg.EventID,
+	)
+	var i Event
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.StartDate,
+		&i.EndDate,
+		&i.Title,
+		&i.Description,
+		&i.Priority,
+		&i.RecurD,
+		&i.RecurW,
+		&i.RecurM,
+		&i.RecurY,
+	)
+	return i, err
+}

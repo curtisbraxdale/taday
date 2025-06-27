@@ -17,6 +17,22 @@ VALUES (
 )
 RETURNING *;
 
+-- name: UpdateEvent :one
+UPDATE events
+SET
+    updated_at = NOW(),
+    start_date = @start_date,
+    end_date = @end_date,
+    title = @title,
+    description = @description,
+    priority = @priority,
+    recur_d = @recur_d,
+    recur_w = @recur_w,
+    recur_m = @recur_m,
+    recur_y = @recur_y
+WHERE id = @event_id
+RETURNING *;
+
 -- name: DeleteEvents :exec
 DELETE FROM events;
 
