@@ -2,7 +2,8 @@
 CREATE TABLE tags (
     id UUID PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-    name TEXT NOT NULL
+    name TEXT NOT NULL,
+    color TEXT NOT NULL
 );
 
 CREATE TABLE event_tags (

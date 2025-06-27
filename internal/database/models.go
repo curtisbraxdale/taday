@@ -62,6 +62,7 @@ type Tag struct {
 	ID     uuid.UUID
 	UserID uuid.UUID
 	Name   string
+	Color  string
 }
 
 type Todo struct {
