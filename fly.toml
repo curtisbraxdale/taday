@@ -7,7 +7,7 @@ app = 'taday-api'
 primary_region = 'ewr'
 
 [build]
-dockerfile = "Dockerfile"
+dockerfile = "./Dockerfile"
 
 [env]
 PORT = '8080'
