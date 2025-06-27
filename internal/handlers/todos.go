@@ -186,3 +186,34 @@ func (cfg *ApiConfig) UpdateToDo(w http.ResponseWriter, req *http.Request) {
 	toDo := ToDo{ID: dbTodo.ID, UserID: dbTodo.UserID, CreatedAt: dbTodo.CreatedAt, UpdatedAt: dbTodo.UpdatedAt, Date: dbTodo.Date.Time, Title: dbTodo.Title, Description: dbTodo.Description.String}
 	respondWithJSON(w, 201, toDo)
 }
+
+func (cfg *ApiConfig) DeleteToDo(w http.ResponseWriter, req *http.Request) {
+	toDoID, err := uuid.Parse(req.PathValue("todo_id"))
+	if err != nil {
+		log.Printf("Error parsing uuid: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+	accessCookie, err := req.Cookie("access_token")
+	if err != nil {
+		log.Printf("Access token not found in cookies: %s", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	accessToken := accessCookie.Value
+
+	_, err = auth.ValidateAccessToken(accessToken, cfg.Secret)
+	if err != nil {
+		log.Printf("Access token invalid: %s", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	err = cfg.Queries.DeleteTodoByID(req.Context(), toDoID)
+	if err != nil {
+		log.Printf("Error deleting todo: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+	w.WriteHeader(204)
+}

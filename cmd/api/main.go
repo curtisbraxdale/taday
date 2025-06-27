@@ -47,6 +47,11 @@ func main() {
 	secure(serveMux, "PUT /api/events/{event_id}", apiCfg.UpdateEvent, secret)
 	secure(serveMux, "PUT /api/todos/{todo_id}", apiCfg.UpdateToDo, secret)
 	secure(serveMux, "PUT /api/tags/{tag_id}", apiCfg.UpdateTag, secret)
+	secure(serveMux, "DELETE /api/users", apiCfg.DeleteUser, secret)
+	secure(serveMux, "DELETE /api/todos/{todo_id}", apiCfg.DeleteToDo, secret)
+	secure(serveMux, "DELETE /api/events/{event_id}", apiCfg.DeleteEvent, secret)
+	secure(serveMux, "DELETE /api/tags/{tag_id}", apiCfg.DeleteTag, secret)
+	secure(serveMux, "DELETE /api/events/{event_id}/tags/{tag_id}", apiCfg.DeleteEventTag, secret)
 
 	server := http.Server{}
 	server.Handler = serveMux

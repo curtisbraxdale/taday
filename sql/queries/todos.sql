@@ -24,6 +24,9 @@ RETURNING *;
 -- name: DeleteTodos :exec
 DELETE FROM todos;
 
+-- name: DeleteTodoByID :exec
+DELETE FROM todos WHERE id = $1;
+
 -- name: GetTodoByID :one
 SELECT * FROM todos WHERE id = $1;
 

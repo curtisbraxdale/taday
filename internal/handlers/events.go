@@ -252,3 +252,34 @@ func (cfg *ApiConfig) UpdateEvent(w http.ResponseWriter, req *http.Request) {
 	event := Event{ID: dbEvent.ID, UserID: dbEvent.UserID, CreatedAt: dbEvent.CreatedAt, UpdatedAt: dbEvent.UpdatedAt, StartDate: dbEvent.StartDate, EndDate: dbEvent.EndDate, Title: dbEvent.Title, Description: dbEvent.Description.String, Priority: dbEvent.Priority, RecurD: dbEvent.RecurD, RecurW: dbEvent.RecurW, RecurM: dbEvent.RecurM, RecurY: dbEvent.RecurY}
 	respondWithJSON(w, 201, event)
 }
+
+func (cfg *ApiConfig) DeleteEvent(w http.ResponseWriter, req *http.Request) {
+	eventID, err := uuid.Parse(req.PathValue("event_id"))
+	if err != nil {
+		log.Printf("Error parsing uuid: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+	accessCookie, err := req.Cookie("access_token")
+	if err != nil {
+		log.Printf("Access token not found in cookies: %s", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	accessToken := accessCookie.Value
+
+	_, err = auth.ValidateAccessToken(accessToken, cfg.Secret)
+	if err != nil {
+		log.Printf("Access token invalid: %s", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	err = cfg.Queries.DeleteEventByID(req.Context(), eventID)
+	if err != nil {
+		log.Printf("Error deleting event: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+	w.WriteHeader(204)
+}

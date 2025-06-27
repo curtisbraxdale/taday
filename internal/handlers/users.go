@@ -131,3 +131,28 @@ func (cfg *ApiConfig) UpdateUser(w http.ResponseWriter, req *http.Request) {
 	updatedUser := User{ID: dbUser.ID, CreatedAt: dbUser.CreatedAt, UpdatedAt: dbUser.UpdatedAt, Username: dbUser.Username, Email: dbUser.Email, PhoneNumber: dbUser.PhoneNumber}
 	respondWithJSON(w, 201, updatedUser)
 }
+
+func (cfg *ApiConfig) DeleteUser(w http.ResponseWriter, req *http.Request) {
+	accessCookie, err := req.Cookie("access_token")
+	if err != nil {
+		log.Printf("Access token not found in cookies: %s", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	accessToken := accessCookie.Value
+
+	userID, err := auth.ValidateAccessToken(accessToken, cfg.Secret)
+	if err != nil {
+		log.Printf("Access token invalid: %s", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	err = cfg.Queries.DeleteUserByID(req.Context(), userID)
+	if err != nil {
+		log.Printf("Error deleting user: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+	w.WriteHeader(204)
+}

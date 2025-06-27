@@ -36,6 +36,9 @@ RETURNING *;
 -- name: DeleteEvents :exec
 DELETE FROM events;
 
+-- name: DeleteEventByID :exec
+DELETE FROM events WHERE id = $1;
+
 -- name: GetEventByID :one
 SELECT * FROM events WHERE id = $1;
 

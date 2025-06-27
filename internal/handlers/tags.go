@@ -222,3 +222,71 @@ func (cfg *ApiConfig) UpdateTag(w http.ResponseWriter, req *http.Request) {
 	tag := Tag{ID: dbTag.ID, UserID: dbTag.UserID, Name: dbTag.Name, Color: dbTag.Color}
 	respondWithJSON(w, 201, tag)
 }
+
+func (cfg *ApiConfig) DeleteTag(w http.ResponseWriter, req *http.Request) {
+	tagID, err := uuid.Parse(req.PathValue("tag_id"))
+	if err != nil {
+		log.Printf("Error parsing uuid: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+	accessCookie, err := req.Cookie("access_token")
+	if err != nil {
+		log.Printf("Access token not found in cookies: %s", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	accessToken := accessCookie.Value
+
+	_, err = auth.ValidateAccessToken(accessToken, cfg.Secret)
+	if err != nil {
+		log.Printf("Access token invalid: %s", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	err = cfg.Queries.DeleteTag(req.Context(), tagID)
+	if err != nil {
+		log.Printf("Error deleting tag: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+	w.WriteHeader(204)
+}
+
+func (cfg *ApiConfig) DeleteEventTag(w http.ResponseWriter, req *http.Request) {
+	tagID, err := uuid.Parse(req.PathValue("tag_id"))
+	if err != nil {
+		log.Printf("Error parsing uuid: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+	eventID, err := uuid.Parse(req.PathValue("event_id"))
+	if err != nil {
+		log.Printf("Error parsing uuid: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+	accessCookie, err := req.Cookie("access_token")
+	if err != nil {
+		log.Printf("Access token not found in cookies: %s", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	accessToken := accessCookie.Value
+
+	_, err = auth.ValidateAccessToken(accessToken, cfg.Secret)
+	if err != nil {
+		log.Printf("Access token invalid: %s", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	deleteParams := database.DeleteEventTagParams{EventID: eventID, TagID: tagID}
+	err = cfg.Queries.DeleteEventTag(req.Context(), deleteParams)
+	if err != nil {
+		log.Printf("Error deleting event tag: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+	w.WriteHeader(204)
+}
