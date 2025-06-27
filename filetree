@@ -1,0 +1,22 @@
+/taday
+│
+├── cmd/                     # your main API backend
+│   └── api/
+|     |       └── main.go
+|    ├── sender/                  # SMS-sending app
+│           ├── main.go
+│           ├── Dockerfile
+│           └── fly.toml
+│
+│
+├── internal/
+│   └── ...
+├── sql/
+│   └── ...
+├── go.mod
+├── go.sum
+├── fly.toml
+├── Dockerfile
+└── .github/
+    └── workflows/
+        └── fly-deploy.yml
