@@ -13,23 +13,29 @@ import (
 	"github.com/google/uuid"
 )
 
-const getAllUserIDs = `-- name: GetAllUserIDs :many
-SELECT id FROM users
+const getAllUsers = `-- name: GetAllUsers :many
+SELECT id, username, phone_number FROM users
 `
 
-func (q *Queries) GetAllUserIDs(ctx context.Context) ([]uuid.UUID, error) {
-	rows, err := q.db.QueryContext(ctx, getAllUserIDs)
+type GetAllUsersRow struct {
+	ID          uuid.UUID
+	Username    string
+	PhoneNumber string
+}
+
+func (q *Queries) GetAllUsers(ctx context.Context) ([]GetAllUsersRow, error) {
+	rows, err := q.db.QueryContext(ctx, getAllUsers)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []uuid.UUID
+	var items []GetAllUsersRow
 	for rows.Next() {
-		var id uuid.UUID
-		if err := rows.Scan(&id); err != nil {
+		var i GetAllUsersRow
+		if err := rows.Scan(&i.ID, &i.Username, &i.PhoneNumber); err != nil {
 			return nil, err
 		}
-		items = append(items, id)
+		items = append(items, i)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err

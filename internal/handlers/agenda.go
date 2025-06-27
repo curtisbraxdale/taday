@@ -24,18 +24,22 @@ func (cfg *ApiConfig) CreateDailyAgenda(userID uuid.UUID) (string, error) {
 		return "", err
 	}
 	agendaString := "=== TADAYs AGENDA ===\n\n"
-	for _, t := range dbToDos {
-		if t.Description.Valid {
-			agendaString += fmt.Sprintf("%v\n+%v\n\n", t.Title, t.Description.String)
-		} else {
-			agendaString += fmt.Sprintf("%v\n\n", t.Title)
+	if len(dbToDos) > 0 {
+		for _, t := range dbToDos {
+			if t.Description.Valid {
+				agendaString += fmt.Sprintf("%v\n+%v\n\n", t.Title, t.Description.String)
+			} else {
+				agendaString += fmt.Sprintf("%v\n\n", t.Title)
+			}
 		}
 	}
-	for _, e := range dbEvents {
-		if e.Description.Valid {
-			agendaString += fmt.Sprintf("%v\n+%v\n\n", e.Title, e.Description.String)
-		} else {
-			agendaString += fmt.Sprintf("%v\n\n", e.Title)
+	if len(dbEvents) > 0 {
+		for _, e := range dbEvents {
+			if e.Description.Valid {
+				agendaString += fmt.Sprintf("%v\n+%v\n\n", e.Title, e.Description.String)
+			} else {
+				agendaString += fmt.Sprintf("%v\n\n", e.Title)
+			}
 		}
 	}
 	agendaString += fmt.Sprint("=====================\n")

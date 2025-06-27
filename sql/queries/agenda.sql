@@ -14,5 +14,5 @@ WHERE user_id = @user_id
   AND end_date >= @date
 ORDER BY start_date ASC;
 
--- name: GetAllUserIDs :many
-SELECT id FROM users;
+-- name: GetAllUsers :many
+SELECT id, username, phone_number FROM users;
