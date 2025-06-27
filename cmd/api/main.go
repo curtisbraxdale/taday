@@ -38,7 +38,9 @@ func main() {
 	secure(serveMux, "POST /api/events/{event_id}/tags", apiCfg.CreateEventTag, secret)
 	secure(serveMux, "GET /api/users", apiCfg.GetUser, secret)
 	secure(serveMux, "GET /api/events", apiCfg.GetUserEvents, secret)
-	secure(serveMux, "GET /api/events/{id}", apiCfg.GetEvent, secret)
+	secure(serveMux, "GET /api/events/{event_id}", apiCfg.GetEvent, secret)
+	secure(serveMux, "GET /api/tags", apiCfg.GetUserTags, secret)
+	secure(serveMux, "GET /api/events/{event_id}/tags", apiCfg.GetEventTags, secret)
 	secure(serveMux, "GET /api/todos", apiCfg.GetUserToDos, secret)
 	secure(serveMux, "GET /api/todos/{id}", apiCfg.GetToDo, secret)
 

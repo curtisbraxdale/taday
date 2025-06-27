@@ -11,6 +11,17 @@ VALUES (
 )
 RETURNING *;
 
+-- name: UpdateUser :one
+UPDATE users
+SET
+    updated_at = NOW(),
+    username = @username,
+    email = @email,
+    hashed_password = @hashed_password,
+    phone_number = @phone_number
+WHERE id = @userID
+RETURNING *;
+
 -- name: DeleteUsers :exec
 DELETE FROM users;
 

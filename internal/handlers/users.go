@@ -81,3 +81,53 @@ func (cfg *ApiConfig) CreateUser(w http.ResponseWriter, req *http.Request) {
 	newUser := User{ID: dbUser.ID, CreatedAt: dbUser.CreatedAt, UpdatedAt: dbUser.UpdatedAt, Username: dbUser.Username, Email: dbUser.Email, PhoneNumber: dbUser.PhoneNumber}
 	respondWithJSON(w, 201, newUser)
 }
+
+func (cfg *ApiConfig) UpdateUser(w http.ResponseWriter, req *http.Request) {
+	type parameters struct {
+		Username    string `json:"username"`
+		Email       string `json:"email"`
+		Password    string `json:"password"`
+		PhoneNumber string `json:"phone_number"`
+	}
+
+	accessCookie, err := req.Cookie("access_token")
+	if err != nil {
+		log.Printf("Access token not found in cookies: %s", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	accessToken := accessCookie.Value
+
+	userID, err := auth.ValidateAccessToken(accessToken, cfg.Secret)
+	if err != nil {
+		log.Printf("Access token invalid: %s", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	decoder := json.NewDecoder(req.Body)
+	params := parameters{}
+	err = decoder.Decode(&params)
+	if err != nil {
+		log.Printf("Error decoding parameters: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+
+	hashedPassword, err := auth.HashPassword(params.Password)
+	if err != nil {
+		log.Printf("Error hashing password: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+
+	dbUserParams := database.UpdateUserParams{Username: params.Username, Email: params.Email, HashedPassword: hashedPassword, PhoneNumber: params.PhoneNumber, Userid: userID}
+	dbUser, err := cfg.Queries.UpdateUser(req.Context(), dbUserParams)
+	if err != nil {
+		log.Printf("Error updating user: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+	updatedUser := User{ID: dbUser.ID, CreatedAt: dbUser.CreatedAt, UpdatedAt: dbUser.UpdatedAt, Username: dbUser.Username, Email: dbUser.Email, PhoneNumber: dbUser.PhoneNumber}
+	respondWithJSON(w, 201, updatedUser)
+}

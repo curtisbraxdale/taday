@@ -108,3 +108,68 @@ func (cfg *ApiConfig) CreateEventTag(w http.ResponseWriter, req *http.Request) {
 	eventTag := EventTag{EventID: dbEventTag.EventID, TagID: dbEventTag.TagID}
 	respondWithJSON(w, 201, eventTag)
 }
+
+func (cfg *ApiConfig) GetUserTags(w http.ResponseWriter, req *http.Request) {
+	accessCookie, err := req.Cookie("access_token")
+	if err != nil {
+		log.Printf("Access token not found in cookies: %s", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	accessToken := accessCookie.Value
+
+	userID, err := auth.ValidateAccessToken(accessToken, cfg.Secret)
+	if err != nil {
+		log.Printf("Access token invalid: %s", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	dbTags, err := cfg.Queries.GetTagsByUserID(req.Context(), userID)
+	if err != nil {
+		log.Printf("Error finding tags for given userID: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+	tags := []Tag{}
+	for _, t := range dbTags {
+		tags = append(tags, Tag{ID: t.ID, UserID: t.UserID, Name: t.Name, Color: t.Color})
+	}
+	respondWithJSON(w, 200, tags)
+}
+
+func (cfg *ApiConfig) GetEventTags(w http.ResponseWriter, req *http.Request) {
+	eventID, err := uuid.Parse(req.PathValue("id"))
+	if err != nil {
+		log.Printf("Error parsing uuid: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+
+	accessCookie, err := req.Cookie("access_token")
+	if err != nil {
+		log.Printf("Access token not found in cookies: %s", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	accessToken := accessCookie.Value
+
+	_, err = auth.ValidateAccessToken(accessToken, cfg.Secret)
+	if err != nil {
+		log.Printf("Access token invalid: %s", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	dbTags, err := cfg.Queries.GetTagsByEventID(req.Context(), eventID)
+	if err != nil {
+		log.Printf("Error finding tags for given eventID: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+	tags := []Tag{}
+	for _, t := range dbTags {
+		tags = append(tags, Tag{ID: t.ID, Name: t.Name, Color: t.Color})
+	}
+	respondWithJSON(w, 200, tags)
+}

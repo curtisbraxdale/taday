@@ -83,3 +83,98 @@ func (q *Queries) DeleteTag(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.ExecContext(ctx, deleteTag, id)
 	return err
 }
+
+const getEventTagsByEventID = `-- name: GetEventTagsByEventID :many
+SELECT event_id, tag_id FROM event_tags WHERE event_id = $1
+`
+
+func (q *Queries) GetEventTagsByEventID(ctx context.Context, eventID uuid.UUID) ([]EventTag, error) {
+	rows, err := q.db.QueryContext(ctx, getEventTagsByEventID, eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []EventTag
+	for rows.Next() {
+		var i EventTag
+		if err := rows.Scan(&i.EventID, &i.TagID); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getTagsByEventID = `-- name: GetTagsByEventID :many
+SELECT tags.id, tags.name, tags.color
+FROM event_tags
+JOIN tags ON tags.id = event_tags.tag_id
+WHERE event_tags.event_id = $1
+`
+
+type GetTagsByEventIDRow struct {
+	ID    uuid.UUID
+	Name  string
+	Color string
+}
+
+func (q *Queries) GetTagsByEventID(ctx context.Context, eventID uuid.UUID) ([]GetTagsByEventIDRow, error) {
+	rows, err := q.db.QueryContext(ctx, getTagsByEventID, eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTagsByEventIDRow
+	for rows.Next() {
+		var i GetTagsByEventIDRow
+		if err := rows.Scan(&i.ID, &i.Name, &i.Color); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getTagsByUserID = `-- name: GetTagsByUserID :many
+SELECT id, user_id, name, color FROM tags WHERE user_id = $1
+`
+
+func (q *Queries) GetTagsByUserID(ctx context.Context, userID uuid.UUID) ([]Tag, error) {
+	rows, err := q.db.QueryContext(ctx, getTagsByUserID, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Tag
+	for rows.Next() {
+		var i Tag
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Name,
+			&i.Color,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

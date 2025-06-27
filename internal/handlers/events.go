@@ -162,7 +162,7 @@ func (cfg *ApiConfig) GetUserEvents(w http.ResponseWriter, req *http.Request) {
 }
 
 func (cfg *ApiConfig) GetEvent(w http.ResponseWriter, req *http.Request) {
-	eventID, err := uuid.Parse(req.PathValue("id"))
+	eventID, err := uuid.Parse(req.PathValue("event_id"))
 	if err != nil {
 		log.Printf("Error parsing uuid: %s", err)
 		w.WriteHeader(500)
