@@ -1,2 +1,4 @@
 .env
 notes.md
+/api
+!/cmd/api
