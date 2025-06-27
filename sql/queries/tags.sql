@@ -28,6 +28,14 @@ FROM event_tags
 JOIN tags ON tags.id = event_tags.tag_id
 WHERE event_tags.event_id = @event_id;
 
+-- name: UpdateTag :one
+UPDATE tags
+SET
+    name = @name,
+    color = @color
+WHERE id = @tag_id
+RETURNING *;
+
 -- name: DeleteTag :exec
 DELETE FROM tags WHERE id = $1;
 

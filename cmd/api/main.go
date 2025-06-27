@@ -46,6 +46,7 @@ func main() {
 	secure(serveMux, "PUT /api/users", apiCfg.UpdateUser, secret)
 	secure(serveMux, "PUT /api/events/{event_id}", apiCfg.UpdateEvent, secret)
 	secure(serveMux, "PUT /api/todos/{todo_id}", apiCfg.UpdateToDo, secret)
+	secure(serveMux, "PUT /api/tags/{tag_id}", apiCfg.UpdateTag, secret)
 
 	server := http.Server{}
 	server.Handler = serveMux

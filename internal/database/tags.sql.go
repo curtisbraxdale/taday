@@ -178,3 +178,30 @@ func (q *Queries) GetTagsByUserID(ctx context.Context, userID uuid.UUID) ([]Tag,
 	}
 	return items, nil
 }
+
+const updateTag = `-- name: UpdateTag :one
+UPDATE tags
+SET
+    name = $1,
+    color = $2
+WHERE id = $3
+RETURNING id, user_id, name, color
+`
+
+type UpdateTagParams struct {
+	Name  string
+	Color string
+	TagID uuid.UUID
+}
+
+func (q *Queries) UpdateTag(ctx context.Context, arg UpdateTagParams) (Tag, error) {
+	row := q.db.QueryRowContext(ctx, updateTag, arg.Name, arg.Color, arg.TagID)
+	var i Tag
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Name,
+		&i.Color,
+	)
+	return i, err
+}

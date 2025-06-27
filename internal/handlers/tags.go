@@ -173,3 +173,52 @@ func (cfg *ApiConfig) GetEventTags(w http.ResponseWriter, req *http.Request) {
 	}
 	respondWithJSON(w, 200, tags)
 }
+
+func (cfg *ApiConfig) UpdateTag(w http.ResponseWriter, req *http.Request) {
+	type parameters struct {
+		Name  string `json:"name"`
+		Color string `json:"color"`
+	}
+
+	tagID, err := uuid.Parse(req.PathValue("tag_id"))
+	if err != nil {
+		log.Printf("Error parsing uuid: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+
+	accessCookie, err := req.Cookie("access_token")
+	if err != nil {
+		log.Printf("Access token not found in cookies: %s", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	accessToken := accessCookie.Value
+
+	decoder := json.NewDecoder(req.Body)
+	params := parameters{}
+	err = decoder.Decode(&params)
+	if err != nil {
+		log.Printf("Error decoding parameters: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+
+	_, err = auth.ValidateAccessToken(accessToken, cfg.Secret)
+	if err != nil {
+		log.Printf("Access token invalid: %s", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	dbTagParams := database.UpdateTagParams{Name: params.Name, Color: params.Color, TagID: tagID}
+	dbTag, err := cfg.Queries.UpdateTag(req.Context(), dbTagParams)
+	if err != nil {
+		log.Printf("Error updating tag: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	tag := Tag{ID: dbTag.ID, UserID: dbTag.UserID, Name: dbTag.Name, Color: dbTag.Color}
+	respondWithJSON(w, 201, tag)
+}
