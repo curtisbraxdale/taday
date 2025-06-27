@@ -8,7 +8,6 @@ primary_region = 'ewr'
 
 [build]
 dockerfile = "Dockerfile"
-build-target = "api"
 
 [env]
 PORT = '8080'
