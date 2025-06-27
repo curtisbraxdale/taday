@@ -1,0 +1,23 @@
+# See https://fly.io/docs/app-guides/continuous-deployment-with-github-actions/
+
+name: Deploy SMS Sender to Fly.io
+
+on:
+  push:
+    paths:
+      - "cmd/sender/**"
+      - ".github/workflows/deploy-sms.yml"
+      - "go.mod"
+      - "go.sum"
+
+jobs:
+  deploy:
+    name: Deploy SMS
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: flyctl deploy --config cmd/sender/fly.toml --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
