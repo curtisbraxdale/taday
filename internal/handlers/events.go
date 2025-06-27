@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"database/sql"
 	"encoding/json"
 	"log"
@@ -93,7 +92,33 @@ func (cfg *ApiConfig) GetUserEvents(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	dbEvents, err := cfg.Queries.GetEventsByUserID(context.Background(), userID)
+	tagFilter := req.URL.Query().Get("tag")
+	rangeFilter := req.URL.Query().Get("range")
+	now := time.Now()
+
+	var startDate, endDate time.Time
+
+	switch rangeFilter {
+	case "day":
+		startDate = now.Truncate(24 * time.Hour)
+		endDate = startDate.Add(24 * time.Hour)
+	case "week":
+		weekday := int(now.Weekday())
+		startDate = now.AddDate(0, 0, -weekday)
+		endDate = startDate.AddDate(0, 0, 7)
+	case "month":
+		startDate = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+		endDate = startDate.AddDate(0, 1, 0)
+	case "year":
+		startDate = time.Date(now.Year(), 1, 1, 0, 0, 0, 0, now.Location())
+		endDate = startDate.AddDate(1, 0, 0)
+	default:
+		startDate = time.Time{}
+		endDate = time.Time{}
+	}
+
+	dbEventParams := database.GetFilteredEventsParams{UserID: userID, StartDate: startDate, EndDate: endDate, Tag: tagFilter}
+	dbEvents, err := cfg.Queries.GetFilteredEvents(req.Context(), dbEventParams)
 	if err != nil {
 		log.Printf("Error finding events for given userID: %s", err)
 		w.WriteHeader(500)
@@ -112,4 +137,63 @@ func (cfg *ApiConfig) GetUserEvents(w http.ResponseWriter, req *http.Request) {
 		sort.Slice(events, func(i, j int) bool { return events[j].StartDate.Before(events[i].StartDate) })
 	}
 	respondWithJSON(w, 200, events)
+	/*
+		 * Old non-filtered query
+			dbEvents, err := cfg.Queries.GetEventsByUserID(context.Background(), userID)
+			if err != nil {
+				log.Printf("Error finding events for given userID: %s", err)
+				w.WriteHeader(500)
+				return
+			}
+			events := []Event{}
+			for _, e := range dbEvents {
+				eventDescription := ""
+				if e.Description.String != "" {
+					eventDescription = e.Description.String
+				}
+				events = append(events, Event{ID: e.ID, UserID: e.UserID, CreatedAt: e.CreatedAt, UpdatedAt: e.UpdatedAt, StartDate: e.StartDate, EndDate: e.EndDate, Title: e.Title, Description: eventDescription, Priority: e.Priority, RecurD: e.RecurD, RecurW: e.RecurW, RecurM: e.RecurM, RecurY: e.RecurY})
+			}
+			sortDir := req.URL.Query().Get("sort")
+			if sortDir == "desc" {
+				sort.Slice(events, func(i, j int) bool { return events[j].StartDate.Before(events[i].StartDate) })
+			}
+			respondWithJSON(w, 200, events)
+	*/
+}
+
+func (cfg *ApiConfig) GetEvent(w http.ResponseWriter, req *http.Request) {
+	eventID, err := uuid.Parse(req.PathValue("id"))
+	if err != nil {
+		log.Printf("Error parsing uuid: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+	accessCookie, err := req.Cookie("access_token")
+	if err != nil {
+		log.Printf("Access token not found in cookies: %s", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	accessToken := accessCookie.Value
+
+	userID, err := auth.ValidateAccessToken(accessToken, cfg.Secret)
+	if err != nil {
+		log.Printf("Access token invalid: %s", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	dbEvent, err := cfg.Queries.GetEventByID(req.Context(), eventID)
+	if err != nil {
+		log.Printf("Error finding event for given id: %s", err)
+		w.WriteHeader(500)
+		return
+	}
+	if dbEvent.UserID != userID {
+		log.Printf("Unauthorized access: user %s tried to access event %s owned by %s", userID, dbEvent.ID, dbEvent.UserID)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	event := Event{ID: dbEvent.ID, UserID: dbEvent.UserID, CreatedAt: dbEvent.CreatedAt, UpdatedAt: dbEvent.UpdatedAt, StartDate: dbEvent.StartDate, EndDate: dbEvent.EndDate, Title: dbEvent.Title, Description: dbEvent.Description.String, Priority: dbEvent.Priority, RecurD: dbEvent.RecurD, RecurW: dbEvent.RecurW, RecurM: dbEvent.RecurM, RecurY: dbEvent.RecurY}
+	respondWithJSON(w, 200, event)
 }

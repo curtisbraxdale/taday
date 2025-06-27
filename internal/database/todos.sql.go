@@ -80,3 +80,38 @@ func (q *Queries) GetTodoByID(ctx context.Context, id uuid.UUID) (Todo, error) {
 	)
 	return i, err
 }
+
+const getTodosByUserID = `-- name: GetTodosByUserID :many
+SELECT id, user_id, created_at, updated_at, date, title, description FROM todos WHERE user_id = $1
+`
+
+func (q *Queries) GetTodosByUserID(ctx context.Context, userID uuid.UUID) ([]Todo, error) {
+	rows, err := q.db.QueryContext(ctx, getTodosByUserID, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Todo
+	for rows.Next() {
+		var i Todo
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Date,
+			&i.Title,
+			&i.Description,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

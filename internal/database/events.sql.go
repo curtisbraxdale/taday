@@ -152,3 +152,68 @@ func (q *Queries) GetEventsByUserID(ctx context.Context, userID uuid.UUID) ([]Ev
 	}
 	return items, nil
 }
+
+const getFilteredEvents = `-- name: GetFilteredEvents :many
+SELECT id, user_id, created_at, updated_at, start_date, end_date, title, description, priority, recur_d, recur_w, recur_m, recur_y
+FROM events
+WHERE events.user_id = $1
+  AND ($2::timestamptz IS NULL OR start_date >= $2)
+  AND ($3::timestamptz IS NULL OR start_date < $3)
+  AND (
+      $4::text IS NULL OR
+      EXISTS (
+          SELECT 1 FROM event_tags et
+          JOIN tags t ON t.id = et.tag_id
+          WHERE et.event_id = events.id AND t.name = $4
+      )
+  )
+`
+
+type GetFilteredEventsParams struct {
+	UserID    uuid.UUID
+	StartDate time.Time
+	EndDate   time.Time
+	Tag       string
+}
+
+func (q *Queries) GetFilteredEvents(ctx context.Context, arg GetFilteredEventsParams) ([]Event, error) {
+	rows, err := q.db.QueryContext(ctx, getFilteredEvents,
+		arg.UserID,
+		arg.StartDate,
+		arg.EndDate,
+		arg.Tag,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Event
+	for rows.Next() {
+		var i Event
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.StartDate,
+			&i.EndDate,
+			&i.Title,
+			&i.Description,
+			&i.Priority,
+			&i.RecurD,
+			&i.RecurW,
+			&i.RecurM,
+			&i.RecurY,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
