@@ -21,7 +21,7 @@ jobs:
     concurrency: deploy-group # optional: ensure only one action runs at a time
     defaults:
       run:
-        working-directory: ./cmd/api
+        working-directory: ./
     steps:
       - uses: actions/checkout@v4
       - uses: superfly/flyctl-actions/setup-flyctl@master
