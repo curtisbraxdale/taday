@@ -1,5 +1,0 @@
-package agenda
-
-func CreateAgenda() {
-
-}
