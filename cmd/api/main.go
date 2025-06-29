@@ -11,6 +11,7 @@ import (
 	"github.com/curtisbraxdale/taday/internal/middleware"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	"github.com/rs/cors"
 )
 
 func main() {
@@ -54,8 +55,14 @@ func main() {
 	secure(serveMux, "DELETE /api/tags/{tag_id}", apiCfg.DeleteTag, secret)
 	secure(serveMux, "DELETE /api/events/{event_id}/tags/{tag_id}", apiCfg.DeleteEventTag, secret)
 
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"https://taday.io"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type"},
+		AllowCredentials: true,
+	})
 	server := http.Server{}
-	server.Handler = serveMux
+	server.Handler = c.Handler(serveMux)
 	server.Addr = ":8080"
 
 	log.Fatal(server.ListenAndServe())
