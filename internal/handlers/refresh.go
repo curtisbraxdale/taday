@@ -47,7 +47,7 @@ func (cfg *ApiConfig) Refresh(w http.ResponseWriter, req *http.Request) {
 		Expires:  time.Now().Add(time.Hour),
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
+		SameSite: http.SameSiteNoneMode,
 	})
 	w.WriteHeader(200)
 }
