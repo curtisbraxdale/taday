@@ -17,6 +17,9 @@ func (cfg *ApiConfig) Login(w http.ResponseWriter, req *http.Request) {
 		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
+	w.Header().Set("Access-Control-Allow-Origin", "https://taday.io")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
+
 	decoder := json.NewDecoder(req.Body)
 	params := parameters{}
 	err := decoder.Decode(&params)
@@ -64,7 +67,7 @@ func (cfg *ApiConfig) Login(w http.ResponseWriter, req *http.Request) {
 		Expires:  time.Now().Add(time.Hour),
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: http.SameSiteNoneMode,
 	})
 
 	http.SetCookie(w, &http.Cookie{
@@ -74,7 +77,7 @@ func (cfg *ApiConfig) Login(w http.ResponseWriter, req *http.Request) {
 		Expires:  time.Now().Add(60 * 24 * time.Hour),
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: http.SameSiteNoneMode,
 	})
 
 	user := User{ID: dbUser.ID, CreatedAt: dbUser.CreatedAt, UpdatedAt: dbUser.UpdatedAt, Email: dbUser.Email}

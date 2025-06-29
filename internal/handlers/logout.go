@@ -6,6 +6,9 @@ import (
 )
 
 func (cfg *ApiConfig) Logout(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "https://taday.io")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
+
 	if refreshCookie, err := req.Cookie("refresh_token"); err == nil {
 		_ = cfg.Queries.RevokeToken(req.Context(), refreshCookie.Value)
 	}

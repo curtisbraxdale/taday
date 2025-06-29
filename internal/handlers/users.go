@@ -54,6 +54,8 @@ func (cfg *ApiConfig) CreateUser(w http.ResponseWriter, req *http.Request) {
 		Password    string `json:"password"`
 		PhoneNumber string `json:"phone_number"`
 	}
+	w.Header().Set("Access-Control-Allow-Origin", "https://taday.io")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
 
 	decoder := json.NewDecoder(req.Body)
 	params := parameters{}

@@ -9,6 +9,9 @@ import (
 )
 
 func (cfg *ApiConfig) Refresh(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "https://taday.io")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
+
 	refreshCookie, err := req.Cookie("refresh_token")
 	if err != nil {
 		log.Printf("Refresh token not found in cookies: %s", err)
