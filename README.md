@@ -2,6 +2,8 @@
 
 **Taday** is a modern RESTful API backend for a productivity web app that delivers daily agendas to users via SMS. Built with Go, PostgreSQL, and Fly.io deployment, the backend features secure authentication, user management, scheduling, tagging, and token-based authorization using HTTP-only cookies.
 
+I built this web app because I have gotten into the digital-minimalist / dumbphone community. As such I try to have as few applications and as little-to-no notifications on my phone. I wanted to be able to stay productive and be reminded of my tasks and events without feeling like I was constantly reaching for my phone again and again. I still have text and call notifications enabled on my phone for emergencies and that's when the idea popped in my head. I could send myself a daily agenda via sms to my phone every morning at 8:00 am, in it there would be events that I had scheduled for the day and some todos that I had logged. This might seem like a regression in technology but for someone like me trying to reduce their screen-time as much as possible I thought that this would be a good use-case for a web app like mind. No app required, no persistent notifications. Just one daily text with the information that you have created and asked for.
+
 ---
 
 ## 🚀 Features
