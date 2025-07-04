@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/google/uuid"
 )
@@ -22,7 +23,7 @@ VALUES (
     $3,
     $4
 )
-RETURNING id, created_at, updated_at, username, email, hashed_password, phone_number
+RETURNING id, created_at, updated_at, username, email, hashed_password, phone_number, stripe_customer_id
 `
 
 type CreateUserParams struct {
@@ -48,6 +49,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Email,
 		&i.HashedPassword,
 		&i.PhoneNumber,
+		&i.StripeCustomerID,
 	)
 	return i, err
 }
@@ -70,8 +72,30 @@ func (q *Queries) DeleteUsers(ctx context.Context) error {
 	return err
 }
 
+const getEmail = `-- name: GetEmail :one
+SELECT email FROM users WHERE id = $1
+`
+
+func (q *Queries) GetEmail(ctx context.Context, id uuid.UUID) (string, error) {
+	row := q.db.QueryRowContext(ctx, getEmail, id)
+	var email string
+	err := row.Scan(&email)
+	return email, err
+}
+
+const getStripeID = `-- name: GetStripeID :one
+SELECT stripe_customer_id FROM users WHERE id = $1
+`
+
+func (q *Queries) GetStripeID(ctx context.Context, id uuid.UUID) (sql.NullString, error) {
+	row := q.db.QueryRowContext(ctx, getStripeID, id)
+	var stripe_customer_id sql.NullString
+	err := row.Scan(&stripe_customer_id)
+	return stripe_customer_id, err
+}
+
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, created_at, updated_at, username, email, hashed_password, phone_number FROM users WHERE email = $1
+SELECT id, created_at, updated_at, username, email, hashed_password, phone_number, stripe_customer_id FROM users WHERE email = $1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
@@ -85,12 +109,13 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.Email,
 		&i.HashedPassword,
 		&i.PhoneNumber,
+		&i.StripeCustomerID,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, created_at, updated_at, username, email, hashed_password, phone_number FROM users WHERE id = $1
+SELECT id, created_at, updated_at, username, email, hashed_password, phone_number, stripe_customer_id FROM users WHERE id = $1
 `
 
 func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
@@ -104,8 +129,45 @@ func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.Email,
 		&i.HashedPassword,
 		&i.PhoneNumber,
+		&i.StripeCustomerID,
 	)
 	return i, err
+}
+
+const getUserByStripeID = `-- name: GetUserByStripeID :one
+SELECT id, created_at, updated_at, username, email, hashed_password, phone_number, stripe_customer_id FROM users WHERE stripe_customer_id = $1
+`
+
+func (q *Queries) GetUserByStripeID(ctx context.Context, stripeCustomerID sql.NullString) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByStripeID, stripeCustomerID)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Username,
+		&i.Email,
+		&i.HashedPassword,
+		&i.PhoneNumber,
+		&i.StripeCustomerID,
+	)
+	return i, err
+}
+
+const updateStripeCustomerID = `-- name: UpdateStripeCustomerID :exec
+UPDATE users
+SET stripe_customer_id = $2
+WHERE id = $1
+`
+
+type UpdateStripeCustomerIDParams struct {
+	ID               uuid.UUID
+	StripeCustomerID sql.NullString
+}
+
+func (q *Queries) UpdateStripeCustomerID(ctx context.Context, arg UpdateStripeCustomerIDParams) error {
+	_, err := q.db.ExecContext(ctx, updateStripeCustomerID, arg.ID, arg.StripeCustomerID)
+	return err
 }
 
 const updateUser = `-- name: UpdateUser :one
@@ -117,7 +179,7 @@ SET
     hashed_password = $3,
     phone_number = $4
 WHERE id = $5
-RETURNING id, created_at, updated_at, username, email, hashed_password, phone_number
+RETURNING id, created_at, updated_at, username, email, hashed_password, phone_number, stripe_customer_id
 `
 
 type UpdateUserParams struct {
@@ -145,6 +207,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.Email,
 		&i.HashedPassword,
 		&i.PhoneNumber,
+		&i.StripeCustomerID,
 	)
 	return i, err
 }

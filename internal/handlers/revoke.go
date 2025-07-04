@@ -22,5 +22,4 @@ func (cfg *ApiConfig) Revoke(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	w.WriteHeader(204)
-	return
 }

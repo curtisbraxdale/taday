@@ -18,4 +18,5 @@ require (
 require (
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/stripe/stripe-go/v82 v82.3.0 // indirect
 )

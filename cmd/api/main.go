@@ -12,10 +12,12 @@ import (
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/rs/cors"
+	"github.com/stripe/stripe-go/v82"
 )
 
 func main() {
 	godotenv.Load()
+	stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
 	dbURL := os.Getenv("DATABASE_URL")
 	platform := os.Getenv("PLATFORM")
 	secret := os.Getenv("SECRET")
@@ -38,6 +40,7 @@ func main() {
 	secure(serveMux, "POST /api/events", apiCfg.CreateEvent, secret)
 	secure(serveMux, "POST /api/tags", apiCfg.CreateTag, secret)
 	secure(serveMux, "POST /api/events/{event_id}/tags", apiCfg.CreateEventTag, secret)
+	secure(serveMux, "POST /api/checkout", apiCfg.CreateCheckoutSession, secret)
 	secure(serveMux, "GET /api/users", apiCfg.GetUser, secret)
 	secure(serveMux, "GET /api/events", apiCfg.GetUserEvents, secret)
 	secure(serveMux, "GET /api/events/{event_id}", apiCfg.GetEvent, secret)

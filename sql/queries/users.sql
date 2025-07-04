@@ -33,3 +33,17 @@ SELECT * FROM users WHERE email = $1;
 
 -- name: GetUserByID :one
 SELECT * FROM users WHERE id = $1;
+
+-- name: GetUserByStripeID :one
+SELECT * FROM users WHERE stripe_customer_id = $1;
+
+-- name: UpdateStripeCustomerID :exec
+UPDATE users
+SET stripe_customer_id = $2
+WHERE id = $1;
+
+-- name: GetStripeID :one
+SELECT stripe_customer_id FROM users WHERE id = $1;
+
+-- name: GetEmail :one
+SELECT email FROM users WHERE id = $1;
