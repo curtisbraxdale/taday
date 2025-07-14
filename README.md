@@ -11,6 +11,7 @@ I built this web app because I have gotten into the digital-minimalist / dumbpho
 * **JWT-based Authentication** with Refresh Tokens
 * **Secure Login, Registration, and Logout Flows**
 * **Persistent Cookie-based Sessions** (HTTP-only, `SameSite=None`, `Secure`)
+* **Stripe Subscription Integration**
 * **CRUD operations for:**
 
   * Users
@@ -105,6 +106,12 @@ All cookies are:
 | POST   | `/api/events/:id/tags`        | Add tag to event      |
 | DELETE | `/api/events/:id/tags/:tagId` | Remove tag from event |
 
+### Stripe
+
+| Method | Endpoint                      | Description           |
+| ------ | ----------------------------- | --------------------- |
+| POST   | `/api/checkout`               | Create Stripe checkout session|
+| POST | `/api/cancel` | Cancel Stripe Subscription |
 ---
 
 ## 🧩 Frontend Integration
@@ -121,12 +128,22 @@ fetch("https://taday-api.fly.dev/api/users", {
 This ensures cookies (access & refresh tokens) are sent and handled securely across domains.
 
 ---
+## 💵 Stripe Integration
+
+Taday API is integrated with Stripe to manage subscription billing for premium plans. The integration includes:
+* **Creating Customers:** A Stripe customer is created when a user initiates the checkout process if one doesn't already exist.
+* **Checkout Sessions:** The /api/checkout endpoint returns a Stripe Checkout session URL that users can visit to subscribe.
+* **Webhooks:** The /api/webhook endpoint listens for Stripe webhook events like customer.subscription.created, updated, and deleted. Subscription state changes are synchronized with the internal database.
+* **Automatic Tax:** The integration supports Stripe's automatic tax calculation, capturing and storing customer address data via Checkout.
+* **Cancel Subscriptions:** An endpoint is available to cancel a subscription by setting cancel_at_period_end to true.
+---
 
 ## ⚙️ Setup (Dev)
 
 1. **Start PostgreSQL** (or use a Fly.io volume)
 2. **Run migrations** with `sqlc`
-3. **Build the Go server**
+3. **Set up environment variables** (e.g., database URL, Stripe keys, Twilio credentials).
+4. **Build the Go server**
 
 ```bash
 go run ./cmd/api
