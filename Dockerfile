@@ -10,5 +10,7 @@ RUN go build -v -o /taday-api ./cmd/api
 
 FROM debian:bookworm
 
+RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
+
 COPY --from=builder /taday-api /usr/local/bin/
 CMD ["taday-api"]
