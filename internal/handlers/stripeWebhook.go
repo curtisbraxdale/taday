@@ -48,8 +48,8 @@ func (cfg *ApiConfig) StripeWebhookHandler(w http.ResponseWriter, r *http.Reques
 			StripeSubscriptionID: sub.ID,
 			Plan:                 "pro",
 			Status:               string(sub.Status),
-			CurrentPeriodStart:   time.Unix(sub.CurrentPeriodStart, 0),
-			CurrentPeriodEnd:     time.Unix(sub.CurrentPeriodEnd, 0),
+			CurrentPeriodStart:   time.Unix(sub.Items.Data[0].CurrentPeriodStart, 0),
+			CurrentPeriodEnd:     time.Unix(sub.Items.Data[0].CurrentPeriodEnd, 0),
 			CancelAtPeriodEnd:    sub.CancelAtPeriodEnd,
 			CanceledAt:           TimeOrNil(sub.CanceledAt),
 			TrialStart:           TimeOrNil(sub.TrialStart),
@@ -72,8 +72,8 @@ func (cfg *ApiConfig) StripeWebhookHandler(w http.ResponseWriter, r *http.Reques
 		user, err := cfg.Queries.GetUserByStripeID(r.Context(), sql.NullString{Valid: true, String: sub.Customer.ID})
 		_, err = cfg.Queries.UpdateSubscription(r.Context(), database.UpdateSubscriptionParams{
 			Status:             string(sub.Status),
-			CurrentPeriodStart: time.Unix(sub.CurrentPeriodStart, 0),
-			CurrentPeriodEnd:   time.Unix(sub.CurrentPeriodEnd, 0),
+			CurrentPeriodStart: time.Unix(sub.Items.Data[0].CurrentPeriodStart, 0),
+			CurrentPeriodEnd:   time.Unix(sub.Items.Data[0].CurrentPeriodEnd, 0),
 			CancelAtPeriodEnd:  sub.CancelAtPeriodEnd,
 			CanceledAt:         TimeOrNil(sub.CanceledAt),
 			TrialStart:         TimeOrNil(sub.TrialStart),
