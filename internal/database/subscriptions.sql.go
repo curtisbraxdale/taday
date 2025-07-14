@@ -95,6 +95,32 @@ func (q *Queries) DeleteSubscriptions(ctx context.Context) error {
 	return err
 }
 
+const getActiveSubscriptionByUserID = `-- name: GetActiveSubscriptionByUserID :one
+SELECT id, user_id, stripe_customer_id, stripe_subscription_id, plan, status, current_period_start, current_period_end, cancel_at_period_end, canceled_at, trial_start, trial_end, created_at, updated_at FROM subscriptions WHERE user_id = $1 AND status = "active"
+`
+
+func (q *Queries) GetActiveSubscriptionByUserID(ctx context.Context, userID uuid.UUID) (Subscription, error) {
+	row := q.db.QueryRowContext(ctx, getActiveSubscriptionByUserID, userID)
+	var i Subscription
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.StripeCustomerID,
+		&i.StripeSubscriptionID,
+		&i.Plan,
+		&i.Status,
+		&i.CurrentPeriodStart,
+		&i.CurrentPeriodEnd,
+		&i.CancelAtPeriodEnd,
+		&i.CanceledAt,
+		&i.TrialStart,
+		&i.TrialEnd,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getSubscriptionByUserID = `-- name: GetSubscriptionByUserID :one
 SELECT id, user_id, stripe_customer_id, stripe_subscription_id, plan, status, current_period_start, current_period_end, cancel_at_period_end, canceled_at, trial_start, trial_end, created_at, updated_at FROM subscriptions WHERE user_id = $1
 `

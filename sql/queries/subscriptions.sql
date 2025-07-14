@@ -40,3 +40,6 @@ SELECT * FROM subscriptions WHERE user_id = $1;
 
 -- name: UserIDFromStripeID :one
 SELECT user_id FROM subscriptions WHERE stripe_customer_id = $1;
+
+-- name: GetActiveSubscriptionByUserID :one
+SELECT * FROM subscriptions WHERE user_id = $1 AND status = "active";
