@@ -64,7 +64,7 @@ func (cfg *ApiConfig) CreateCheckoutSession(w http.ResponseWriter, req *http.Req
 	params := &stripe.CheckoutSessionParams{
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
-				Price:    stripe.String("price_1RgrzhP4x5qmnWDOq8VmMjTy"),
+				Price:    stripe.String("price_1RkrUj03wkQu8EDp7ZBLneeB"),
 				Quantity: stripe.Int64(1),
 			},
 		},
