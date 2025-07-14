@@ -9,6 +9,8 @@ on:
       - ".github/workflows/deploy-sms.yml"
       - "go.mod"
       - "go.sum"
+    branches:
+      - "main"
 
 jobs:
   deploy:

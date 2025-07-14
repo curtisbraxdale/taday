@@ -120,3 +120,71 @@ func (q *Queries) GetSubscriptionByUserID(ctx context.Context, userID uuid.UUID)
 	)
 	return i, err
 }
+
+const updateSubscription = `-- name: UpdateSubscription :one
+UPDATE subscriptions
+SET
+    updated_at = NOW(),
+    status = $1,
+    current_period_start = $2,
+    current_period_end = $3,
+    cancel_at_period_end = $4,
+    canceled_at = $5,
+    trial_start = $6,
+    trial_end = $7
+WHERE user_id = $8
+RETURNING id, user_id, stripe_customer_id, stripe_subscription_id, plan, status, current_period_start, current_period_end, cancel_at_period_end, canceled_at, trial_start, trial_end, created_at, updated_at
+`
+
+type UpdateSubscriptionParams struct {
+	Status             string
+	CurrentPeriodStart time.Time
+	CurrentPeriodEnd   time.Time
+	CancelAtPeriodEnd  bool
+	CanceledAt         sql.NullTime
+	TrialStart         sql.NullTime
+	TrialEnd           sql.NullTime
+	UserID             uuid.UUID
+}
+
+func (q *Queries) UpdateSubscription(ctx context.Context, arg UpdateSubscriptionParams) (Subscription, error) {
+	row := q.db.QueryRowContext(ctx, updateSubscription,
+		arg.Status,
+		arg.CurrentPeriodStart,
+		arg.CurrentPeriodEnd,
+		arg.CancelAtPeriodEnd,
+		arg.CanceledAt,
+		arg.TrialStart,
+		arg.TrialEnd,
+		arg.UserID,
+	)
+	var i Subscription
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.StripeCustomerID,
+		&i.StripeSubscriptionID,
+		&i.Plan,
+		&i.Status,
+		&i.CurrentPeriodStart,
+		&i.CurrentPeriodEnd,
+		&i.CancelAtPeriodEnd,
+		&i.CanceledAt,
+		&i.TrialStart,
+		&i.TrialEnd,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const userIDFromStripeID = `-- name: UserIDFromStripeID :one
+SELECT user_id FROM subscriptions WHERE stripe_customer_id = $1
+`
+
+func (q *Queries) UserIDFromStripeID(ctx context.Context, stripeCustomerID string) (uuid.UUID, error) {
+	row := q.db.QueryRowContext(ctx, userIDFromStripeID, stripeCustomerID)
+	var user_id uuid.UUID
+	err := row.Scan(&user_id)
+	return user_id, err
+}
