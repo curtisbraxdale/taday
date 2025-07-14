@@ -33,6 +33,7 @@ func main() {
 	serveMux.HandleFunc("GET /api/ready", handlers.ReadyCheck)
 	serveMux.HandleFunc("POST /api/login", apiCfg.Login)
 	serveMux.HandleFunc("POST /api/users", apiCfg.CreateUser)
+	serveMux.HandleFunc("POST /api/webhook", apiCfg.StripeWebhookHandler)
 	secure(serveMux, "POST /api/logout", apiCfg.Logout, secret)
 	secure(serveMux, "POST /api/refresh", apiCfg.Refresh, secret)
 	secure(serveMux, "POST /api/revoke", apiCfg.Revoke, secret)
