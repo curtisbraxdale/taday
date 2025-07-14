@@ -78,6 +78,10 @@ func (cfg *ApiConfig) CreateCheckoutSession(w http.ResponseWriter, req *http.Req
 		},
 
 		Customer: stripe.String(userStripeID.String),
+
+		CustomerUpdate: &stripe.CheckoutSessionCustomerUpdateParams{
+			Address: stripe.String("auto"),
+		},
 	}
 
 	s, err := session.New(params)
