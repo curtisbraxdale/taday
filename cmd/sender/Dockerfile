@@ -13,4 +13,4 @@ FROM debian:bookworm
 RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /taday-sms /usr/local/bin/
-CMD ["taday-sms"]
+CMD ["sleep", "infinity"]
