@@ -10,5 +10,7 @@ RUN go build -v -o /taday-sms ./cmd/sender
 
 FROM debian:bookworm
 
+RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
+
 COPY --from=builder /taday-sms /usr/local/bin/
 CMD ["taday-sms"]
